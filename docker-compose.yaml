@@ -1,0 +1,54 @@
+version: "3"
+
+services:
+  back:
+    image: back-cueva
+    container_name: cback-cueva
+    build:
+      dockerfile: Dockerfile
+    ports:
+      - 3000:3000
+    environment:
+      - APP_PORT=${APP_PORT:-3000}
+      - APP_SALT=${APP_SALT:-10}
+      - JWT_SECRET=${JWT_SECRET:-secret}
+      - JWT_EXP=${JWT_EXP:-1}
+      - DB_PORT=${DB_PORT:-3306}
+      - DB_HOST=${DB_HOST:-mysql}
+      - DB_USER=${DB_USER:-root}
+      - DB_PASS=${DB_PASS:-strongpassword}
+      - DB_NAME=${DB_NAME:-demo}
+      - DB_TIME=${DB_TIME:-America/Lima}
+      - DB_DIALECT=${DB_DIALECT:-mysql}
+      - USERS_TABLE=${USERS_TABLE:-users}
+      - ROLES_TABLE=${ROLES_TABLE:-roles}
+      - ENTITIES_TABLE=${ENTITIES_TABLE:-entities}
+      - PERMISSIONS_TABLE=${PERMISSIONS_TABLE:-permissions}
+      - ROLE_PERMISSIONS_TABLE=${ROLE_PERMISSIONS_TABLE:-role_permissions}
+      - USER_ROLES_TABLE=${USER_ROLES_TABLE:-user_roles}
+    depends_on:
+      mysql:
+        condition: service_healthy
+    networks:
+      - demo
+
+  mysql:
+    image: ${MYSQL_ENGINE:-mariadb}:${MYSQL_VERSION:-10.6}
+    command: --character-set-server=utf8mb4 --collation-server=utf8mb4_bin
+    volumes:
+      - ./.docker/data/:/var/lib/mysql
+    environment:
+      - MYSQL_DATABASE=${MYSQL_DATABASE:-demo}
+      - MYSQL_ROOT_PASSWORD=${MYSQL_ROOT_PASSWORD:-strongpassword}
+      - TZ=${TZ:-America/Fortaleza}
+    ports:
+      - ${MYSQL_PORT:-3306}:3306
+    healthcheck:
+      test: "mysql --host=${DB_HOST:-mysql} --user=${DB_USER:-root} --password=${DB_PASS:-strongpassword} -e 'SELECT 1;'"
+    restart: always
+    networks:
+      - demo
+
+
+networks:
+  demo:
